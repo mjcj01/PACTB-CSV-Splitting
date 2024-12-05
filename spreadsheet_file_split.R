@@ -7,10 +7,11 @@ library(tidyverse)
 ### I have tried to include annotations to not only make it easy to replicate the
 ### CSV file splitting, but also to demystify how code works. Anything that has
 ### a set of "###" in front of it is an annotation and not actual code. If you remove
-### the "###", R will read it as code and get very confused.
+### the "###", R will read it as code and not work.
 
 ### The "%>%" is a pipe operator. This means that it takes the output of the code
-### from one function and "pipes it" into the next function.
+### from one function and "pipes it" into the next function on the following line
+### of code.
 
 ### Reading in CSV File
 read_csv("LIT-SHORTLIST.csv") %>%
@@ -23,9 +24,10 @@ read_csv("LIT-SHORTLIST.csv") %>%
   mutate("location_line" = ifelse(is.na(`Extended Bio`),
                                   paste(City, "|", County, sep = " "),
                                   paste(City, "|", County, "|", `Extended Bio`, sep = " ")),
-         "web_line" = ifelse(is.na(`Personal Webpage`),
-                                   paste(`PSU Catalog Link`),
-                                   paste(`PSU Catalog Link`, "|", `Personal Webpage`, sep = " "))) %>%
+         "web_line" = ifelse(is.na(`Personal Webpage`), paste(`PSU Catalog Link`),
+                      ifelse(is.na(`PSU Catalog Link`), paste(`Personal Webpage`),
+                      ifelse(is.na(`Personal Webpage`) & is.na(`PSU Catalog Link`), " ", 
+                             paste(`PSU Catalog Link`, " | ", `Personal Webpage`, sep = ""))))) %>%
   ### This tells R to remember to group rows with the same value in the Genre column together.
   group_by(Genre) %>%
   ### I found this next code in a help forum, so I do not entirely understand it.
@@ -46,18 +48,18 @@ read_csv("ALL-TIMEAWARE.csv") %>%
   ### If anything falls outside these dates, it will return a "Check!" so that you can see
   ### which rows are giving trouble.
   mutate("TimePeriod" = ifelse(BIRTH < "1775-01-01", "Colonial",
-                         ifelse(BIRTH >= "1775-01-01" & BIRTH < "1800-01-01", "Revolutionary",
-                         ifelse(BIRTH >= "1800-01-01" & BIRTH < "1865-01-01", "Romanticism",
-                         ifelse(BIRTH >= "1865-01-01" & BIRTH < "1900-01-01", "Realism",
-                         ifelse(BIRTH >= "1900-01-01" & BIRTH < "1945-01-01", "Modernism",
-                         ifelse(BIRTH >= "1945-01-01", "Contemporary", "Check!"))))))) %>%
+                               ifelse(BIRTH >= "1775-01-01" & BIRTH < "1800-01-01", "Revolutionary",
+                                      ifelse(BIRTH >= "1800-01-01" & BIRTH < "1865-01-01", "Romanticism",
+                                             ifelse(BIRTH >= "1865-01-01" & BIRTH < "1900-01-01", "Realism",
+                                                    ifelse(BIRTH >= "1900-01-01" & BIRTH < "1945-01-01", "Modernism",
+                                                           ifelse(BIRTH >= "1945-01-01", "Contemporary", "Check!"))))))) %>%
   mutate(TimePeriod = gsub("\\ / ", " or ", TimePeriod),
          TimePeriod = gsub("\\/", " or ", TimePeriod)) %>%
   ### Instead of grouping by genre, we are grouping by time period since this is for the
   ### chronological maps.
   group_by(TimePeriod) %>%
   group_walk(function(.x, .y) {
-    write.csv(.x, file = paste0("CSV Files/Cultural Chronological Map Files/", .y$TimePeriod, ".csv", sep = ""))
+    write.csv(.x, file = paste0("CSV Files/Cultural Chronological Map Files/cultural_", .y$TimePeriod, ".csv", sep = ""))
   })
 
 
@@ -68,16 +70,16 @@ read_csv("LIT-TIMEAWARE.csv") %>%
   mutate("BIRTH" = as.Date(TimeBirth, "%m/%d/%Y"),
          "DEATH" = as.Date(TimeDeath, "%m/%d/%Y")) %>%
   mutate("TimePeriod" = ifelse(BIRTH < "1775-01-01", "Colonial",
-                         ifelse(BIRTH >= "1775-01-01" & BIRTH < "1800-01-01", "Revolutionary",
-                         ifelse(BIRTH >= "1800-01-01" & BIRTH < "1865-01-01", "Romanticism",
-                         ifelse(BIRTH >= "1865-01-01" & BIRTH < "1900-01-01", "Realism",
-                         ifelse(BIRTH >= "1900-01-01" & BIRTH < "1945-01-01", "Modernism",
-                         ifelse(BIRTH >= "1945-01-01", "Contemporary", "Check!"))))))) %>%
+                               ifelse(BIRTH >= "1775-01-01" & BIRTH < "1800-01-01", "Revolutionary",
+                                      ifelse(BIRTH >= "1800-01-01" & BIRTH < "1865-01-01", "Romanticism",
+                                             ifelse(BIRTH >= "1865-01-01" & BIRTH < "1900-01-01", "Realism",
+                                                    ifelse(BIRTH >= "1900-01-01" & BIRTH < "1945-01-01", "Modernism",
+                                                           ifelse(BIRTH >= "1945-01-01", "Contemporary", "Check!"))))))) %>%
   mutate(TimePeriod = gsub("\\ / ", " or ", TimePeriod),
          TimePeriod = gsub("\\/", " or ", TimePeriod)) %>%
   group_by(TimePeriod) %>%
   group_walk(function(.x, .y) {
-    write.csv(.x, file = paste0("CSV Files/Literary Chronological Map Files/", .y$TimePeriod, ".csv", sep = ""))
+    write.csv(.x, file = paste0("CSV Files/Literary Chronological Map Files/lit_", .y$TimePeriod, ".csv", sep = ""))
   })
 
 read_csv("ALL-SHORTLIST.csv") %>%
@@ -86,10 +88,11 @@ read_csv("ALL-SHORTLIST.csv") %>%
   mutate("location_line" = ifelse(is.na(`Extended Bio`),
                                   paste(City, "|", County, sep = " "),
                                   paste(City, "|", County, "|", `Extended Bio`, sep = " ")),
-         "web_line" = ifelse(is.na(`Personal Webpage`),
-                             paste(`PSU Catalog Link`),
-                             paste(`PSU Catalog Link`, "|", `Personal Webpage`, sep = " "))) %>%
+         "web_line" = ifelse(is.na(`Personal Webpage`), paste(`PSU Catalog Link`),
+                      ifelse(is.na(`PSU Catalog Link`), paste(`Personal Webpage`),
+                      ifelse(is.na(`Personal Webpage`) & is.na(`PSU Catalog Link`), " ", 
+                             paste(`PSU Catalog Link`, " | ", `Personal Webpage`, sep = ""))))) %>%
   group_by(Vocation) %>%
   group_walk(function(.x, .y) {
-    write.csv(.x, file = paste0("CSV Files/Cultural Static Map Files/", .y$Vocation, ".csv", sep = ""))
+    write.csv(.x, file = paste0("CSV Files/Cultural Static Map Files/cultural_", .y$Vocation, ".csv", sep = ""))
   })
